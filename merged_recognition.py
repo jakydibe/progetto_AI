@@ -7,7 +7,7 @@ from sklearn.utils import shuffle
 import time
 from PIL import Image
 
-num_images = 1000
+num_images = 7000
 
 
 # Carica i file CSV del dataset EMNIST (assicurati di specificare il percorso corretto)
@@ -46,11 +46,14 @@ for y in range(len(test_data_letters.iloc[:, 0])):
 train_data_numbers = pd.read_csv('C:\\Users\\jakyd\\Desktop\\progetto_AI\\dataset\\emnist-mnist-train.csv', header=None)
 test_data_numbers = pd.read_csv('C:\\Users\\jakyd\\Desktop\\progetto_AI\\dataset\\emnist-mnist-test.csv', header=None)
 
+train_data_digital = pd.read_csv('C:\\Users\\jakyd\\Desktop\\progetto_AI\\dataset\\output.csv', header=None)
+test_data_digital = pd.read_csv('C:\\Users\\jakyd\\Desktop\\progetto_AI\\dataset\\output.csv', header=None)
+
 #togliere 0,5,6,7,8,9, corrispondono letteralmente
 print("pulendo i numeri")
 
-filtro_train_numbers = (train_data_numbers.iloc[:, 0] <= 4) & (train_data_numbers.iloc[:, 0] != 0)
-filtro_test_numbers = (test_data_numbers.iloc[:, 0] <=4) & (test_data_numbers.iloc[:, 0] != 0)
+filtro_train_numbers = (train_data_numbers.iloc[:, 0] <= 4)
+filtro_test_numbers = (test_data_numbers.iloc[:, 0] <=4)
 
 
 train_data_numbers = train_data_numbers[filtro_train_numbers]
@@ -61,9 +64,12 @@ test_data_numbers = shuffle(test_data_numbers, random_state=42)
 train_data_letters = shuffle(train_data_letters, random_state=42)
 test_data_letters = shuffle(test_data_letters, random_state=42)
 
-train_data = pd.concat([train_data_letters[:num_images], train_data_numbers[:num_images]], ignore_index=True)
-test_data = pd.concat([test_data_letters[:num_images], test_data_numbers[:num_images]], ignore_index=True)
 
+# num_images = min(num_images, len(train_data_letters), len(train_data_numbers))
+# train_data = pd.concat([train_data_letters[:num_images], train_data_numbers[:num_images]], ignore_index=True)
+# test_data = pd.concat([test_data_letters[:num_images], test_data_numbers[:num_images]], ignore_index=True)
+train_data = pd.concat([train_data_letters,train_data_digital, train_data_numbers], ignore_index=True)
+test_data = pd.concat([test_data_letters,test_data_digital,test_data_numbers], ignore_index=True)
 
 
 # Mescola i dati di addestramento (train_data)
@@ -115,7 +121,7 @@ print(X_test)
 print("prima di creare il classificatore")
 
 # Crea un classificatore MLP (Multi-layer Perceptron), utilizza la sigmoide come funzione di attivazione
-classifier = MLPClassifier(hidden_layer_sizes=(256,128,36),solver='adam', max_iter=500, activation='logistic')
+classifier = MLPClassifier(hidden_layer_sizes=(256,256,128), max_iter=15000, activation='relu')
 
 print("prima di addestrare")
 
@@ -131,14 +137,21 @@ accuracy = accuracy_score(y_test, y_pred)
 print(f'Accuracy: {accuracy:.2f}')
 
 
-img = Image.open('sotto_immagine_0_3.png')
-img_gray = img.convert('L')
-#img_gray = img_gray.resize((28, 28), Image.ANTIALIAS)
+grandezze_immagini = [7,5,4,2]
+for im in range(len(grandezze_immagini)):
+    for i in range(grandezze_immagini[im]):
+        for j in range(grandezze_immagini[im]):
+            img = Image.open(f'C:\\Users\\jakyd\\Desktop\\progetto_AI\\immagini\\sotto_immagine_{im}_{i}_{j}.png')
+            img_gray = img.convert('L')
+            #img_gray = img_gray.resize((28, 28), Image.ANTIALIAS)
 
-print(img_gray)
-img_array = np.asarray(img_gray)
-img_array = img_array / 255.0
-img_array = img_array.reshape(1, 784)
+            print(img_gray)
+            img_array = np.asarray(img_gray)
+            img_array = img_array / 255.0
+            img_array = img_array.reshape(1, 784)
 
-img_pred = classifier.predict(img_array)
-print(f"PREDICTION IMMAGINE: {img_pred}")
+            img_pred = classifier.predict(img_array)
+            print(f"PREDICTION IMMAGINE {im}_{i}_{j}: {img_pred}")
+
+
+#X=24, S=19, T=20 + 10 -> 34, 29, 30
